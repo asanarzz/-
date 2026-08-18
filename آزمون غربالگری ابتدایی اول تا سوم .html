@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>آزمون غربالگری ابتدایی اول تا سوم</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;600;800&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; }
+  body { font-family: 'Vazirmatn', Tahoma, sans-serif; background: #f2f4f7; color: #1a2233; margin: 0; padding: 16px; }
+  .header { text-align: center; margin-bottom: 18px; }
+  .header h1 { font-size: 19px; color: #0b3d6e; margin: 0 0 6px; }
+  .header p { font-size: 13px; color: #567; margin: 0; }
+  .name-box { background: #fff; border-radius: 14px; padding: 14px; margin-bottom: 16px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
+  .name-box label { display:block; font-size:14px; font-weight:600; margin-bottom:6px; }
+  .name-box input { width: 100%; padding: 10px; border-radius: 10px; border: 1px solid #ccd4e0; font-family: inherit; font-size: 14px; }
+  .q-card { background: #fff; border-radius: 14px; padding: 14px; margin-bottom: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
+  .q-text { font-size: 15px; font-weight: 600; margin-bottom: 10px; line-height: 1.6; }
+  .opts { display: flex; gap: 8px; flex-wrap: wrap; }
+  .opt { flex: 1 1 auto; min-width: 70px; }
+  .opt input { display: none; }
+  .opt label { display: block; text-align: center; padding: 9px 6px; border-radius: 10px; background: #eef1f6; color: #33445a; font-size: 13px; cursor: pointer; border: 2px solid transparent; }
+  .opt input:checked + label { background: #0b6ee0; color: #fff; border-color: #084d9e; font-weight: 600; }
+  button[type="submit"] { display: block; width: 100%; background: #0b6ee0; color: #fff; border: none; padding: 16px; border-radius: 14px; font-size: 17px; font-weight: 800; font-family: inherit; margin-top: 20px; cursor: pointer; }
+  .note { text-align: center; font-size: 12px; color: #789; margin-top: 10px; }
+  .progress { position: sticky; top: 0; background: #f2f4f7; padding: 8px 0; font-size: 12px; color: #567; text-align: center; z-index: 5; }
+</style>
+</head>
+<body>
+  <div class="header">
+    <h1>آزمون غربالگری ابتدایی اول تا سوم</h1>
+    <p>لطفاً برای هر سوال، گزینه‌ای که بیشترین تطابق را با وضعیت دارد انتخاب کنید.</p>
+  </div>
+
+  <div class="progress" id="progress">۰ از ۴۱ سوال پاسخ داده شده</div>
+
+  <form id="quizForm" action="https://formsubmit.co/Asannettt@gmail.com" method="POST">
+    <input type="hidden" name="_subject" value="پاسخ آزمون غربالگری ابتدایی اول تا سوم">
+    <input type="hidden" name="_captcha" value="false">
+    <div class="name-box">
+      <label>نام و نام خانوادگی دانش‌آموز</label>
+      <input type="text" name="نام دانش آموز" required>
+    </div>
+
+    <div id="questions"></div>
+
+    <button type="submit">ثبت و ارسال پاسخ‌ها</button>
+    <div class="note">بعد از زدن دکمه، صفحه تایید نشون داده میشه.</div>
+  </form>
+
+<script>
+const questions = [
+"پیروی از دستورات برایش مشکل است.",
+"تمایل دارد از تختخواب مشترک با والدین، خواهر یا برادر استفاده کند.",
+"با مکان‌ها و افراد جدید، سریع ارتباط می‌گیرد.",
+"هنگام فعالیت‌ها مرتباً از این شاخه به آن شاخه می‌پرد.",
+"فکرهای تکرارشونده درباره‌ی ترس‌های بی‌مورد دارد.",
+"نگرانی‌های بی‌دلیل از خود نشان می‌دهد.",
+"اسباب‌بازی‌ها و اشیای لازم برای بازی یا فعالیت‌ها را گم می‌کند.",
+"عفونت مجاری ادراری یا دردهای شکمی بدون دلیل دارد.",
+"برای اطمینان از نتایج آزمون در اینجا گزینه هرگز را انتخاب نمایید.",
+"هنگام دوری از والدین، شکایت‌های بدنی مکرر (سردرد، دل‌درد و تهوع) دارد.",
+"وقتی از او بخواهید مدتی آرام بنشیند، می‌تواند این‌گونه باشد.",
+"حرکات و رفتارهای جنسی در صحبت، بازی یا نقاشی از خود نشان می‌دهد.",
+"از حضور در مکان‌های عمومی می‌ترسد.",
+"در جاهایی که مناسب دویدن نیست، بی‌توجه می‌دود.",
+"رفتارهای جنسی نامتناسب با سن خود بروز می‌دهد.",
+"بی‌اختیار ناخن‌هایش را می‌جود.",
+"در خانه و مدرسه مدام بی‌هدف بالا و پایین می‌پرد.",
+"شاهد و یا درگیر رفتارهای جنسی با دیگران بوده است.",
+"از حضور در مدرسه یا مکان‌های دیگر به دلیل ترس جدایی از والدین امتناع می‌کند.",
+"از انجام تکالیفی که نیازمند فعالیت ذهنی مداوم است، اجتناب می‌کند.",
+"جراحاتی در بدن دارد که با دلایل ارائه شده برای آن‌ها، همخوانی ندارد.",
+"در روخوانی فارسی در حد همسالانش است.",
+"در یادگیری شکل نوشتاری حروف یا نشانه‌ها مشکل دارد.",
+"در شمارش اعداد، ترتیب و توالی را رعایت نمی‌کند.",
+"حروف (مثلاً ب، پ، ت و ث) را به‌جای همدیگر به کار می‌برد.",
+"در املای کلماتی که در آن‌ها از حروف هم‌آوا استفاده شده است، مشکل دارد (برای مثال کطاب به جای کتاب).",
+"درک صحیحی از ارزش مکانی اعداد ندارد (مثلاً: یکان، دهگان، صدگان).",
+"برخی از صداهای کلمات را حذف یا اضافه می‌کند (مثلاً می‌دهد به جای می‌دهند یا می‌کنند به جای می‌کند).",
+"برای اطمینان از نتایج آزمون در اینجا گزینه اغلب را انتخاب نمایید.",
+"دست‌خط او نسبت به سنش خوب است.",
+"در انجام عملیات ریاضی نظیر جمع و تفریق یا ضرب و تقسیم ذهنی، مشکل دارد.",
+"در روخوانی کندتر از همسالان خود عمل می‌کند.",
+"نمی‌تواند روی خط بنویسد.",
+"در تکالیف مربوط به شمارش با الگو مانند دوتادوتا شمردن یا شمردن مضرب اعداد مشکل دارد.",
+"بدون توجه به متن، براساس حدس و گمان می‌خواند.",
+"درهم‌وبرهم می‌نویسد.",
+"در حل مسائل کلامی ریاضی مشکل دارد.",
+"در بیان مفهوم کلی داستان درس‌ها، حتی به زبان مادری مشکل دارد.",
+"در تشخیص یا استفاده از علائم نگارشی مانند علامت سؤال، نقطه، ویرگول و علامت تعجب مشکل دارد.",
+"در الگویابی بین اشکال مشکل دارد (مثلاً متوجه نمی‌شود باید در انتهای الگوی دایره دایره مثلث چهارگوش دایره دایره مثلث چهارگوش دوباره دو دایره، یک سه‌گوش و یک چهارگوش قرار گیرد).",
+"همواره از فعالیت‌های سلبریتی محبوبش صحبت می‌کند."
+];
+
+const opts = ["هرگز", "گاهی", "اغلب اوقات", "همیشه"];
+const container = document.getElementById('questions');
+
+questions.forEach((q, i) => {
+  const num = i + 52;
+  const card = document.createElement('div');
+  card.className = 'q-card';
+  const qText = document.createElement('div');
+  qText.className = 'q-text';
+  qText.textContent = num + ". " + q;
+  card.appendChild(qText);
+  const optsDiv = document.createElement('div');
+  optsDiv.className = 'opts';
+  opts.forEach((opt, j) => {
+    const wrap = document.createElement('div');
+    wrap.className = 'opt';
+    const id = "q" + num + "_" + j;
+    wrap.innerHTML = `<input type="radio" id="${id}" name="${num}. ${q}" value="${opt}" required>
+      <label for="${id}">${opt}</label>`;
+    optsDiv.appendChild(wrap);
+  });
+  card.appendChild(optsDiv);
+  container.appendChild(card);
+});
+
+const progressEl = document.getElementById('progress');
+document.getElementById('quizForm').addEventListener('change', () => {
+  const answered = new Set();
+  document.querySelectorAll('input[type=radio]:checked').forEach(r => answered.add(r.name));
+  progressEl.textContent = answered.size + " از " + questions.length + " سوال پاسخ داده شده";
+});
+</script>
+</body>
+</html>
