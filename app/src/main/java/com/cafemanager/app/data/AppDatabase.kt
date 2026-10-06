@@ -60,16 +60,28 @@ interface ActivityDao {
     fun recent(n: Int): Flow<List<ActivityEntry>>
 }
 
-@Database(entities = [Customer::class, ActivityEntry::class], version = 1, exportSchema = true)
+@Database(
+    entities = [
+        Customer::class, ActivityEntry::class, Service::class, Invoice::class,
+        InvoiceItem::class, Txn::class, Debt::class, CashDay::class
+    ],
+    version = 2,
+    exportSchema = true
+)
 abstract class AppDatabase : RoomDatabase() {
     abstract fun customers(): CustomerDao
     abstract fun activity(): ActivityDao
+    abstract fun services(): ServiceDao
+    abstract fun invoices(): InvoiceDao
+    abstract fun txns(): TxnDao
+    abstract fun debts(): DebtDao
+    abstract fun cash(): CashDao
 
     companion object {
         @Volatile private var inst: AppDatabase? = null
         fun get(ctx: Context): AppDatabase = inst ?: synchronized(this) {
             inst ?: Room.databaseBuilder(ctx.applicationContext, AppDatabase::class.java, "cafe_manager.db")
-                .build().also { inst = it }
+                .fallbackToDestructiveMigration().build().also { inst = it }
         }
     }
 }
