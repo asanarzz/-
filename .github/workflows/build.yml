@@ -18,9 +18,16 @@ jobs:
       - uses: gradle/actions/setup-gradle@v4
         with:
           gradle-version: 8.9
+      - name: Restore signing key
+        env:
+          KS: ${{ secrets.DEBUG_KEYSTORE_B64 }}
+        run: |
+          if [ -n "$KS" ]; then echo "$KS" | base64 -d > app/debug.keystore; fi
       - name: Build debug APK
         run: gradle :app:assembleDebug --no-daemon
+      - name: Rename APK
+        run: cp app/build/outputs/apk/debug/app-debug.apk CAFEMANAGER.apk
       - uses: actions/upload-artifact@v4
         with:
-          name: CafeManager-debug-apk
-          path: app/build/outputs/apk/debug/*.apk
+          name: CAFEMANAGER
+          path: CAFEMANAGER.apk
