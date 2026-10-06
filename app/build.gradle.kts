@@ -13,13 +13,23 @@ android {
         applicationId = "com.cafemanager.app"
         minSdk = 26
         targetSdk = 34
-        versionCode = 1
+        // شماره ساخت در GitHub هر بار بیشتر می‌شود تا نسخه جدید روی قبلی نصب شود
+        versionCode = System.getenv("GITHUB_RUN_NUMBER")?.toIntOrNull() ?: 1
         versionName = "0.1.0"
     }
 
     // امضای Release فقط از متغیرهای محیطی خوانده می‌شود؛ Keystore هرگز داخل مخزن نیست.
     val ksPath = System.getenv("KEYSTORE_PATH")
     signingConfigs {
+        // کلید ثابت Debug: همه نسخه‌ها با یک امضا ساخته می‌شوند و روی هم نصب (آپدیت) می‌شوند
+        if (file("debug.keystore").exists()) {
+            getByName("debug") {
+                storeFile = file("debug.keystore")
+                storePassword = "android"
+                keyAlias = "androiddebugkey"
+                keyPassword = "android"
+            }
+        }
         if (ksPath != null) {
             create("release") {
                 storeFile = file(ksPath)
