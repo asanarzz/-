@@ -1,0 +1,3 @@
+<resources>
+    <style name="Theme.CafeManager" parent="android:Theme.Material.NoActionBar" />
+</resources>
