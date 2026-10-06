@@ -8,20 +8,41 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.cafemanager.app.AppViewModel
+import com.cafemanager.app.BizViewModel
 import com.cafemanager.app.util.fa
 import com.cafemanager.app.util.formatDateTime
 
 @Composable
-fun DashboardScreen(vm: AppViewModel, onNewCustomer: () -> Unit, modifier: Modifier = Modifier) {
+private fun StatCard(title: String, value: String, modifier: Modifier = Modifier) {
+    Card(modifier) {
+        Column(Modifier.padding(14.dp)) {
+            Text(title, style = MaterialTheme.typography.bodySmall)
+            Text(value, style = MaterialTheme.typography.titleMedium)
+        }
+    }
+}
+
+@Composable
+fun DashboardScreen(
+    vm: AppViewModel, biz: BizViewModel,
+    onNewCustomer: () -> Unit, onNewSale: () -> Unit, onLedger: () -> Unit,
+    modifier: Modifier = Modifier
+) {
     val count by vm.customerCount.collectAsState()
     val recent by vm.recent.collectAsState()
+    val today by biz.todayTxns.collectAsState()
+    val debts by biz.debts.collectAsState()
+    val counted = today.filter { it.inProfit }
+    val income = counted.filter { it.isIncome }.sumOf { it.amount }
+    val expense = counted.filter { !it.isIncome }.sumOf { it.amount }
+    val debtTotal = debts.sumOf { it.amount - it.paid }
 
     LazyColumn(
         modifier = modifier.padding(horizontal = 16.dp),
@@ -31,23 +52,37 @@ fun DashboardScreen(vm: AppViewModel, onNewCustomer: () -> Unit, modifier: Modif
         item {
             Text(vm.profile.cafeName, style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
         }
+        item { Text("آمار امروز", style = MaterialTheme.typography.titleMedium) }
         item {
-            Card(modifier = Modifier.fillMaxWidth()) {
-                Row(Modifier.padding(20.dp), verticalAlignment = Alignment.CenterVertically) {
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                StatCard("درآمد", money(income), Modifier.weight(1f))
+                StatCard("هزینه", money(expense), Modifier.weight(1f))
+            }
+        }
+        item {
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                StatCard("سود", money(income - expense), Modifier.weight(1f))
+                StatCard("مطالبات باز", money(debtTotal), Modifier.weight(1f))
+            }
+        }
+        item {
+            Card(Modifier.fillMaxWidth()) {
+                Row(Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
                     Icon(Icons.Default.Person, null, tint = MaterialTheme.colorScheme.primary)
                     Spacer(Modifier.width(12.dp))
-                    Column {
-                        Text("تعداد مشتریان")
-                        Text(count.fa(), style = MaterialTheme.typography.headlineMedium)
-                    }
+                    Text("تعداد مشتریان: " + count.fa())
                 }
             }
         }
         item {
-            Button(onClick = onNewCustomer, modifier = Modifier.fillMaxWidth()) {
-                Icon(Icons.Default.Add, null)
-                Spacer(Modifier.width(8.dp))
-                Text("مشتری جدید")
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                Button(onClick = onNewCustomer, modifier = Modifier.weight(1f)) {
+                    Icon(Icons.Default.Add, null)
+                    Spacer(Modifier.width(4.dp))
+                    Text("مشتری")
+                }
+                Button(onClick = onNewSale, modifier = Modifier.weight(1f)) { Text("ثبت خدمت") }
+                Button(onClick = onLedger, modifier = Modifier.weight(1f)) { Text("دخل و خرج") }
             }
         }
         item { Text("فعالیت‌های اخیر", style = MaterialTheme.typography.titleMedium) }

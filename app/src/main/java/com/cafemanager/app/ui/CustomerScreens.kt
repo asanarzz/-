@@ -102,8 +102,8 @@ fun CustomerFormScreen(vm: AppViewModel, id: Long, onClose: () -> Unit) {
         val m = mobile.normDigits()
         error = when {
             first.isBlank() || last.isBlank() -> "نام و نام خانوادگی الزامی است"
-            m.isNotEmpty() && !Regex("09\\d{9}").matches(m) -> "شماره موبایل معتبر نیست (مثال: ۰۹۱۲۳۴۵۶۷۸۹)"
-            n.isNotEmpty() && !validNationalId(n) -> "کد ملی معتبر نیست"
+            m.isNotEmpty() && !Regex("\\d{10,11}").matches(m) -> "شماره موبایل باید ۱۰ یا ۱۱ رقم باشد"
+            n.isNotEmpty() && !Regex("\\d{10}").matches(n) -> "کد ملی باید ۱۰ رقم باشد"
             else -> null
         }
         if (error != null) return
