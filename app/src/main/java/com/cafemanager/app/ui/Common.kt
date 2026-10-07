@@ -159,15 +159,23 @@ fun smsNumber(ctx: Context, n: String) {
     }
 }
 
-/** باز کردن ایتا؛ اگر پیوند مستقیم کار نکرد، شماره کپی و خود برنامه باز می‌شود. */
-fun openEitaa(ctx: Context, clip: ClipboardManager, n: String) {
-    val intl = "98" + n.trimStart('0')
-    val link = Intent(Intent.ACTION_VIEW, Uri.parse("eitaa://resolve?phone=$intl")).setPackage("ir.eitaa.messenger")
-    if (safeStart(ctx, link)) return
+/**
+ * ایتا از روی شماره موبایل لینک مستقیم ندارد؛ فقط با آیدی (نام کاربری) می‌شود وارد پیوی شد.
+ * با آیدی: پیوی همان فرد باز می‌شود. بدون آیدی: ایتا باز می‌شود و شماره کپی می‌شود.
+ */
+fun openEitaa(ctx: Context, clip: ClipboardManager, number: String, eitaaId: String) {
+    val id = eitaaId.trim().removePrefix("https://").removePrefix("eitaa.com/").removePrefix("@").trim()
+    if (id.isNotEmpty()) {
+        val uri = Uri.parse("https://eitaa.com/$id")
+        if (safeStart(ctx, Intent(Intent.ACTION_VIEW, uri).setPackage("ir.eitaa.messenger"))) return
+        if (safeStart(ctx, Intent(Intent.ACTION_VIEW, uri))) return
+        Toast.makeText(ctx, "ایتا یا مرورگر پیدا نشد", Toast.LENGTH_LONG).show()
+        return
+    }
+    clip.setText(AnnotatedString(number))
     val launch = ctx.packageManager.getLaunchIntentForPackage("ir.eitaa.messenger")
-    clip.setText(AnnotatedString(n))
     if (launch != null && safeStart(ctx, launch)) {
-        Toast.makeText(ctx, "شماره کپی شد؛ در ایتا جستجو کنید", Toast.LENGTH_LONG).show()
+        Toast.makeText(ctx, "آیدی ایتا ثبت نشده؛ شماره کپی شد. آیدی را ثبت کنید تا پیوی مستقیم باز شود", Toast.LENGTH_LONG).show()
     } else {
         Toast.makeText(ctx, "ایتا روی گوشی نصب نیست", Toast.LENGTH_LONG).show()
     }
