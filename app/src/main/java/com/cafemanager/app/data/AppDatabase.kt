@@ -2,6 +2,8 @@ package com.cafemanager.app.data
 
 import android.content.Context
 import androidx.room.*
+import androidx.room.migration.Migration
+import androidx.sqlite.db.SupportSQLiteDatabase
 import kotlinx.coroutines.flow.Flow
 
 @Entity(tableName = "customers", indices = [Index("mobile"), Index("nationalId")])
@@ -13,6 +15,7 @@ data class Customer(
     val nationalId: String = "",
     val mobile: String = "",
     val phone: String = "",
+    @ColumnInfo(defaultValue = "''") val cityCode: String = "",
     val birthDate: String = "",
     val address: String = "",
     val postalCode: String = "",
@@ -65,7 +68,7 @@ interface ActivityDao {
         Customer::class, ActivityEntry::class, Service::class, Invoice::class,
         InvoiceItem::class, Txn::class, Debt::class, CashDay::class
     ],
-    version = 2,
+    version = 3,
     exportSchema = true
 )
 abstract class AppDatabase : RoomDatabase() {
@@ -81,7 +84,13 @@ abstract class AppDatabase : RoomDatabase() {
         @Volatile private var inst: AppDatabase? = null
         fun get(ctx: Context): AppDatabase = inst ?: synchronized(this) {
             inst ?: Room.databaseBuilder(ctx.applicationContext, AppDatabase::class.java, "cafe_manager.db")
-                .fallbackToDestructiveMigration().build().also { inst = it }
+                .addMigrations(MIGRATION_2_3).fallbackToDestructiveMigration().build().also { inst = it }
         }
+    }
+}
+
+val MIGRATION_2_3 = object : Migration(2, 3) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+        db.execSQL("ALTER TABLE customers ADD COLUMN cityCode TEXT NOT NULL DEFAULT ''")
     }
 }

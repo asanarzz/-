@@ -107,6 +107,9 @@ interface TxnDao {
 
     @Query("SELECT * FROM transactions WHERE createdAt BETWEEN :from AND :to ORDER BY createdAt DESC")
     fun between(from: Long, to: Long): Flow<List<Txn>>
+
+    @Query("DELETE FROM transactions WHERE createdAt BETWEEN :from AND :to")
+    suspend fun deleteBetween(from: Long, to: Long)
 }
 
 @Dao

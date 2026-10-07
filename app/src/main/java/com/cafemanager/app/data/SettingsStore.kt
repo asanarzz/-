@@ -26,6 +26,10 @@ class SettingsStore(ctx: Context) {
         get() = p.getInt("autoLockSec", 60)
         set(v) { p.edit().putInt("autoLockSec", v).commit() }
 
+    var fontScale: Float
+        get() = p.getFloat("fontScale", 1.5f)
+        set(v) { p.edit().putFloat("fontScale", v).commit() }
+
     val hasPin: Boolean get() = pinHash.isNotEmpty()
 
     fun profile() = Profile(s("cafeName"), s("ownerName"), s("phone"), s("address"))
