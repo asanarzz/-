@@ -131,3 +131,24 @@ interface CashDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun upsert(d: CashDay)
 }
+
+/** رمز عبور سامانه‌های مشتری؛ فیلد password رمزنگاری‌شده ذخیره می‌شود. */
+@Entity(tableName = "customer_passwords", indices = [Index("customerId")])
+data class CustomerPassword(
+    @PrimaryKey(autoGenerate = true) val id: Long = 0,
+    val customerId: Long,
+    val system: String,
+    val username: String,
+    val password: String
+)
+
+@Dao
+interface PasswordDao {
+    @Query("SELECT * FROM customer_passwords WHERE customerId = :cid ORDER BY id")
+    suspend fun forCustomer(cid: Long): List<CustomerPassword>
+
+    @Insert suspend fun insertAll(list: List<CustomerPassword>)
+
+    @Query("DELETE FROM customer_passwords WHERE customerId = :cid")
+    suspend fun deleteForCustomer(cid: Long)
+}

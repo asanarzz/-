@@ -16,6 +16,19 @@ data class Customer(
     val mobile: String = "",
     val phone: String = "",
     @ColumnInfo(defaultValue = "''") val cityCode: String = "",
+    @ColumnInfo(defaultValue = "''") val birthCity: String = "",
+    @ColumnInfo(defaultValue = "''") val idIssueCity: String = "",
+    @ColumnInfo(defaultValue = "''") val idIssueDate: String = "",
+    @ColumnInfo(defaultValue = "''") val idSerialLetter: String = "",
+    @ColumnInfo(defaultValue = "''") val idSerialSeries: String = "",
+    @ColumnInfo(defaultValue = "''") val idSerialNumber: String = "",
+    @ColumnInfo(defaultValue = "''") val job: String = "",
+    @ColumnInfo(defaultValue = "''") val education: String = "",
+    @ColumnInfo(defaultValue = "''") val iban: String = "",
+    @ColumnInfo(defaultValue = "''") val bankName: String = "",
+    @ColumnInfo(defaultValue = "''") val bankBranch: String = "",
+    @ColumnInfo(defaultValue = "''") val branchCode: String = "",
+    @ColumnInfo(defaultValue = "''") val eitaaId: String = "",
     val birthDate: String = "",
     val address: String = "",
     val postalCode: String = "",
@@ -66,9 +79,9 @@ interface ActivityDao {
 @Database(
     entities = [
         Customer::class, ActivityEntry::class, Service::class, Invoice::class,
-        InvoiceItem::class, Txn::class, Debt::class, CashDay::class
+        InvoiceItem::class, Txn::class, Debt::class, CashDay::class, CustomerPassword::class
     ],
-    version = 3,
+    version = 4,
     exportSchema = true
 )
 abstract class AppDatabase : RoomDatabase() {
@@ -79,12 +92,13 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun txns(): TxnDao
     abstract fun debts(): DebtDao
     abstract fun cash(): CashDao
+    abstract fun passwords(): PasswordDao
 
     companion object {
         @Volatile private var inst: AppDatabase? = null
         fun get(ctx: Context): AppDatabase = inst ?: synchronized(this) {
             inst ?: Room.databaseBuilder(ctx.applicationContext, AppDatabase::class.java, "cafe_manager.db")
-                .addMigrations(MIGRATION_2_3).fallbackToDestructiveMigration().build().also { inst = it }
+                .addMigrations(MIGRATION_2_3, MIGRATION_3_4).fallbackToDestructiveMigration().build().also { inst = it }
         }
     }
 }
@@ -92,5 +106,15 @@ abstract class AppDatabase : RoomDatabase() {
 val MIGRATION_2_3 = object : Migration(2, 3) {
     override fun migrate(db: SupportSQLiteDatabase) {
         db.execSQL("ALTER TABLE customers ADD COLUMN cityCode TEXT NOT NULL DEFAULT ''")
+    }
+}
+
+val MIGRATION_3_4 = object : Migration(3, 4) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+        listOf("birthCity", "idIssueCity", "idIssueDate", "idSerialLetter", "idSerialSeries", "idSerialNumber", "job", "education", "iban", "bankName", "bankBranch", "branchCode", "eitaaId").forEach { col ->
+            db.execSQL("ALTER TABLE customers ADD COLUMN " + col + " TEXT NOT NULL DEFAULT ''")
+        }
+        db.execSQL("CREATE TABLE IF NOT EXISTS `customer_passwords` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `customerId` INTEGER NOT NULL, `system` TEXT NOT NULL, `username` TEXT NOT NULL, `password` TEXT NOT NULL)")
+        db.execSQL("CREATE INDEX IF NOT EXISTS `index_customer_passwords_customerId` ON `customer_passwords` (`customerId`)")
     }
 }
