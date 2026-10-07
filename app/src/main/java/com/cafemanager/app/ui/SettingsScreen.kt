@@ -8,6 +8,7 @@ import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import com.cafemanager.app.AppViewModel
 import com.cafemanager.app.BizViewModel
@@ -25,6 +26,10 @@ fun SettingsScreen(vm: AppViewModel, biz: BizViewModel, modifier: Modifier = Mod
     var confirmReset by remember { mutableStateOf(false) }
     var resetDone by remember { mutableStateOf(false) }
     val periodLabels = listOf("امروز", "این هفته", "این ماه")
+    val ctx = LocalContext.current
+    val version = remember {
+        try { ctx.packageManager.getPackageInfo(ctx.packageName, 0).versionName ?: "" } catch (e: Exception) { "" }
+    }
 
     Column(
         modifier.verticalScroll(rememberScrollState()).padding(16.dp),
@@ -57,7 +62,7 @@ fun SettingsScreen(vm: AppViewModel, biz: BizViewModel, modifier: Modifier = Mod
         Text("اندازه متن")
         FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             listOf(1f to "عادی", 1.25f to "بزرگ", 1.5f to "درشت", 1.75f to "خیلی درشت").forEach { (f, l) ->
-                FilterChip(selected = vm.fontScale == f, onClick = { vm.setFontScale(f) }, label = { Text(l) })
+                FilterChip(selected = vm.fontScale == f, onClick = { vm.changeFontScale(f) }, label = { Text(l) })
             }
         }
 
@@ -83,6 +88,9 @@ fun SettingsScreen(vm: AppViewModel, biz: BizViewModel, modifier: Modifier = Mod
             colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
         ) { Text("ریست اطلاعات مالی " + periodLabels[resetPeriod]) }
         if (resetDone) Text("ریست انجام شد")
+
+        HorizontalDivider()
+        Text("CAFEMANAGER $version", style = MaterialTheme.typography.bodySmall)
     }
 
     if (confirmReset) AlertDialog(
