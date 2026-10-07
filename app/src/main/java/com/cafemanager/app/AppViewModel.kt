@@ -7,6 +7,7 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.room.withTransaction
 import com.cafemanager.app.data.*
+import com.cafemanager.app.security.Crypto
 import com.cafemanager.app.security.PinManager
 import com.cafemanager.app.util.normDigits
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -116,18 +117,32 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
 
     suspend fun getCustomer(id: Long): Customer? = db.customers().get(id)
 
-    fun saveCustomer(c: Customer, onDone: () -> Unit) {
+    suspend fun getPasswords(id: Long): List<PasswordDraft> =
+        db.passwords().forCustomer(id).map { PasswordDraft(it.system, it.username, Crypto.decrypt(it.password)) }
+
+    fun saveCustomer(c: Customer, passwords: List<PasswordDraft>, onDone: () -> Unit) {
         viewModelScope.launch {
             try {
                 db.withTransaction {
                     val name = "${c.firstName} ${c.lastName}"
+                    val cid: Long
                     if (c.id == 0L) {
-                        db.customers().insert(c)
+                        cid = db.customers().insert(c)
                         db.activity().insert(ActivityEntry(type = "customer_add", message = "مشتری جدید اضافه شد: $name"))
                     } else {
                         db.customers().update(c)
+                        cid = c.id
                         db.activity().insert(ActivityEntry(type = "customer_edit", message = "اطلاعات مشتری ویرایش شد: $name"))
                     }
+                    db.passwords().deleteForCustomer(cid)
+                    db.passwords().insertAll(
+                        passwords.filter { it.system.isNotBlank() || it.password.isNotBlank() }.map {
+                            CustomerPassword(
+                                customerId = cid, system = it.system.trim(),
+                                username = it.username.trim(), password = Crypto.encrypt(it.password)
+                            )
+                        }
+                    )
                 }
                 onDone()
             } catch (e: Exception) {
@@ -154,3 +169,6 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
         viewModelScope.launch { db.activity().insert(ActivityEntry(type = type, message = msg)) }
     }
 }
+
+/** رمز یک سامانه (در حافظه به‌صورت متن ساده، در دیتابیس رمزنگاری‌شده) */
+data class PasswordDraft(val system: String, val username: String, val password: String)
