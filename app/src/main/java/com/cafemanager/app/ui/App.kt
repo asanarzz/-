@@ -15,7 +15,9 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalLayoutDirection
+import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.cafemanager.app.AppViewModel
@@ -29,7 +31,11 @@ fun CafeApp(vm: AppViewModel) {
         else -> isSystemInDarkTheme()
     }
     CafeTheme(dark) {
-        CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Rtl) {
+        val d = LocalDensity.current
+        CompositionLocalProvider(
+            LocalLayoutDirection provides LayoutDirection.Rtl,
+            LocalDensity provides Density(d.density, d.fontScale * vm.fontScale)
+        ) {
             Surface(Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
                 when {
                     !vm.setupDone -> SetupScreen(vm)
@@ -80,7 +86,7 @@ fun MainScaffold(vm: AppViewModel) {
             "debts" -> DebtsScreen(biz, back)
             "cash" -> CashScreen(biz, back)
             "reports" -> ReportsScreen(biz, back)
-            else -> SubScreen("تنظیمات", back) { pad -> SettingsScreen(vm, Modifier.padding(pad)) }
+            else -> SubScreen("تنظیمات", back) { pad -> SettingsScreen(vm, biz, Modifier.padding(pad)) }
         }
         return
     }

@@ -129,6 +129,7 @@ private fun CheckoutDialog(
     subtotal: Long, lines: List<CartLine>, customer: Customer?, biz: BizViewModel,
     onClose: () -> Unit, onSaved: (Long) -> Unit
 ) {
+    var name by remember { mutableStateOf(customer?.let { "${it.firstName} ${it.lastName}" } ?: "") }
     var discount by remember { mutableStateOf("") }
     var paidText by remember { mutableStateOf("") }
     var method by remember { mutableStateOf("نقدی") }
@@ -145,7 +146,11 @@ private fun CheckoutDialog(
         title = { Text("ثبت فاکتور") },
         text = {
             Column(Modifier.verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                Text(customer?.let { "مشتری: ${it.firstName} ${it.lastName}" } ?: "مشتری متفرقه")
+                AppField("نام مشتری", name, { name = it })
+                Text("خدمات انجام‌شده", style = MaterialTheme.typography.titleSmall)
+                lines.forEach { l ->
+                    KV("${l.service.name} × ${l.qty.fa()}", money(l.service.price * l.qty))
+                }
                 KV("جمع خدمات", money(subtotal))
                 MoneyField("تخفیف (تومان)", discount, { discount = it })
                 KV("مبلغ نهایی", money(total))
@@ -159,11 +164,12 @@ private fun CheckoutDialog(
         },
         confirmButton = {
             TextButton(enabled = !saving, onClick = {
-                if (paid < total && customer == null) {
-                    err = "برای ثبت بدهی باید مشتری انتخاب شود"
+                val n = name.trim()
+                if (paid < total && n.isEmpty()) {
+                    err = "برای ثبت بدهی نام مشتری را بنویسید یا انتخاب کنید"
                 } else {
                     saving = true
-                    biz.saveInvoice(customer, lines, disc, paid, method, note.trim(), onSaved)
+                    biz.saveInvoice(customer, n, lines, disc, paid, method, note.trim(), onSaved)
                 }
             }) { Text("ثبت") }
         },

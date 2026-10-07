@@ -2,6 +2,10 @@ package com.cafemanager.app.ui
 
 import android.content.Context
 import android.content.Intent
+import android.net.Uri
+import android.widget.Toast
+import androidx.compose.ui.platform.ClipboardManager
+import androidx.compose.ui.text.AnnotatedString
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -19,7 +23,7 @@ import com.cafemanager.app.util.fa
 import com.cafemanager.app.util.normDigits
 import java.util.Locale
 
-val paymentMethods = listOf("نقدی", "کارت", "انتقال", "سایر")
+val paymentMethods = listOf("نقدی", "کارت به کارت", "کارتخوان", "سایر")
 
 fun money(v: Long): String = "%,d".format(Locale.US, v).replace(',', '٬').fa() + " تومان"
 
@@ -125,4 +129,46 @@ fun CustomerPickerDialog(customers: List<Customer>, onPick: (Customer) -> Unit, 
         confirmButton = {},
         dismissButton = { TextButton(onClick = onDismiss) { Text("بستن") } }
     )
+}
+
+fun copyText(ctx: Context, clip: ClipboardManager, text: String) {
+    if (text.isBlank()) {
+        Toast.makeText(ctx, "کادر خالی است", Toast.LENGTH_SHORT).show()
+        return
+    }
+    clip.setText(AnnotatedString(text))
+    Toast.makeText(ctx, "کپی شد", Toast.LENGTH_SHORT).show()
+}
+
+private fun safeStart(ctx: Context, i: Intent): Boolean = try {
+    ctx.startActivity(i)
+    true
+} catch (e: Exception) {
+    false
+}
+
+fun dialNumber(ctx: Context, n: String) {
+    if (!safeStart(ctx, Intent(Intent.ACTION_DIAL, Uri.parse("tel:$n")))) {
+        Toast.makeText(ctx, "برنامه تماس پیدا نشد", Toast.LENGTH_SHORT).show()
+    }
+}
+
+fun smsNumber(ctx: Context, n: String) {
+    if (!safeStart(ctx, Intent(Intent.ACTION_SENDTO, Uri.parse("smsto:$n")))) {
+        Toast.makeText(ctx, "برنامه پیامک پیدا نشد", Toast.LENGTH_SHORT).show()
+    }
+}
+
+/** باز کردن ایتا؛ اگر پیوند مستقیم کار نکرد، شماره کپی و خود برنامه باز می‌شود. */
+fun openEitaa(ctx: Context, clip: ClipboardManager, n: String) {
+    val intl = "98" + n.trimStart('0')
+    val link = Intent(Intent.ACTION_VIEW, Uri.parse("eitaa://resolve?phone=$intl")).setPackage("ir.eitaa.messenger")
+    if (safeStart(ctx, link)) return
+    val launch = ctx.packageManager.getLaunchIntentForPackage("ir.eitaa.messenger")
+    clip.setText(AnnotatedString(n))
+    if (launch != null && safeStart(ctx, launch)) {
+        Toast.makeText(ctx, "شماره کپی شد؛ در ایتا جستجو کنید", Toast.LENGTH_LONG).show()
+    } else {
+        Toast.makeText(ctx, "ایتا روی گوشی نصب نیست", Toast.LENGTH_LONG).show()
+    }
 }
