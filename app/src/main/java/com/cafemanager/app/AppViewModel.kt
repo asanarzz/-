@@ -22,6 +22,7 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
     var locked by mutableStateOf(store.setupDone && store.hasPin); private set
     var themeMode by mutableIntStateOf(store.themeMode); private set
     var autoLockSec by mutableIntStateOf(store.autoLockSec); private set
+    var fontScale by mutableFloatStateOf(store.fontScale); private set
     var profile by mutableStateOf(store.profile()); private set
     var lockMessage by mutableStateOf<String?>(null); private set
     var error by mutableStateOf<String?>(null)
@@ -91,6 +92,7 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
     // ---------- تنظیمات ----------
     fun setTheme(m: Int) { store.themeMode = m; themeMode = m }
     fun setAutoLock(sec: Int) { store.autoLockSec = sec; autoLockSec = sec }
+    fun setFontScale(f: Float) { store.fontScale = f; fontScale = f }
     fun saveProfile(p: Profile) {
         store.saveProfile(p)
         profile = p

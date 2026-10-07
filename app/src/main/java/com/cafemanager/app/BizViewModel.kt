@@ -109,13 +109,13 @@ class BizViewModel(app: Application) : AndroidViewModel(app) {
 
     // ---------- فاکتور ----------
     fun saveInvoice(
-        customer: Customer?, lines: List<CartLine>, discount: Long, paid: Long,
+        customer: Customer?, customerName: String, lines: List<CartLine>, discount: Long, paid: Long,
         method: String, note: String, onDone: (Long) -> Unit
     ) = guard {
         val subtotal = lines.sumOf { it.service.price * it.qty }
         val total = (subtotal - discount).coerceAtLeast(0)
         val paidAmt = paid.coerceIn(0, total)
-        val name = customer?.let { "${it.firstName} ${it.lastName}" } ?: ""
+        val name = customerName.trim()
         var newId = 0L
         db.withTransaction {
             newId = db.invoices().insert(
@@ -155,6 +155,7 @@ class BizViewModel(app: Application) : AndroidViewModel(app) {
         sb.appendLine("تاریخ: " + formatDateTime(inv.createdAt))
         sb.appendLine("مشتری: " + inv.customerName.ifBlank { "متفرقه" })
         sb.appendLine("────────────")
+        sb.appendLine("خدمات انجام‌شده:")
         items.forEach {
             sb.appendLine("${it.serviceName} × ${it.qty.toString().fa()} = ${money(it.lineTotal)}")
         }
@@ -166,6 +167,17 @@ class BizViewModel(app: Application) : AndroidViewModel(app) {
         if (inv.paid < inv.total) sb.appendLine("باقی‌مانده: " + money(inv.total - inv.paid))
         if (inv.note.isNotBlank()) sb.appendLine("توضیح: " + inv.note)
         onText(sb.toString())
+    }
+
+    // ---------- ریست اطلاعات مالی ----------
+    fun resetFinance(p: Int, onDone: () -> Unit) = guard {
+        val (a, b) = rangeFor(p)
+        val label = when (p) { 0 -> "امروز"; 1 -> "این هفته"; else -> "این ماه" }
+        db.withTransaction {
+            db.txns().deleteBetween(a, b)
+            db.activity().insert(ActivityEntry(type = "reset", message = "اطلاعات مالی $label ریست شد"))
+        }
+        onDone()
     }
 
     // ---------- بدهی ----------
