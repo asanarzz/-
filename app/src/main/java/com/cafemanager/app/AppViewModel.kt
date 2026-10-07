@@ -92,7 +92,7 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
     // ---------- تنظیمات ----------
     fun setTheme(m: Int) { store.themeMode = m; themeMode = m }
     fun setAutoLock(sec: Int) { store.autoLockSec = sec; autoLockSec = sec }
-    fun setFontScale(f: Float) { store.fontScale = f; fontScale = f }
+    fun changeFontScale(f: Float) { store.fontScale = f; fontScale = f }
     fun saveProfile(p: Profile) {
         store.saveProfile(p)
         profile = p
