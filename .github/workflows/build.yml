@@ -26,8 +26,11 @@ jobs:
       - name: Build debug APK
         run: gradle :app:assembleDebug --no-daemon
       - name: Rename APK
-        run: cp app/build/outputs/apk/debug/app-debug.apk CAFEMANAGER.apk
+        run: |
+          VER=$(grep -oP 'versionName = "\K[^"]+' app/build.gradle.kts)
+          echo "VER=$VER" >> $GITHUB_ENV
+          cp app/build/outputs/apk/debug/app-debug.apk "CAFEMANAGER.$VER.apk"
       - uses: actions/upload-artifact@v4
         with:
-          name: CAFEMANAGER
-          path: CAFEMANAGER.apk
+          name: CAFEMANAGER.${{ env.VER }}
+          path: CAFEMANAGER.${{ env.VER }}.apk
