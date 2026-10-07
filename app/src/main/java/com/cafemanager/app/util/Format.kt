@@ -51,6 +51,56 @@ object Jalali {
         return Triple(jy, jm, jd)
     }
 
+    fun toGregorian(jy: Int, jm: Int, jd: Int): Triple<Int, Int, Int> {
+        val y = jy + 1595
+        var days = -355668 + (365 * y) + ((y / 33) * 8) + (((y % 33) + 3) / 4) + jd +
+            (if (jm < 7) (jm - 1) * 31 else ((jm - 7) * 30) + 186)
+        var gy = 400 * (days / 146097)
+        days %= 146097
+        if (days > 36524) {
+            days--
+            gy += 100 * (days / 36524)
+            days %= 36524
+            if (days >= 365) days++
+        }
+        gy += 4 * (days / 1461)
+        days %= 1461
+        if (days > 365) {
+            gy += (days - 1) / 365
+            days = (days - 1) % 365
+        }
+        var gd = days + 1
+        val leap = (gy % 4 == 0 && gy % 100 != 0) || gy % 400 == 0
+        val sal = intArrayOf(0, 31, if (leap) 29 else 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31)
+        var gm = 0
+        while (gm < 13 && gd > sal[gm]) {
+            gd -= sal[gm]
+            gm++
+        }
+        return Triple(gy, gm, gd)
+    }
+
+    fun isLeap(y: Int): Boolean = (y % 33) in intArrayOf(1, 5, 9, 13, 17, 22, 26, 30)
+
+    fun monthLength(y: Int, m: Int): Int = when {
+        m <= 6 -> 31
+        m <= 11 -> 30
+        else -> if (isLeap(y)) 30 else 29
+    }
+
+    /** فاصله اولین روز ماه از شنبه (۰ = شنبه) */
+    fun firstWeekdayOffset(jy: Int, jm: Int): Int {
+        val (gy, gm, gd) = toGregorian(jy, jm, 1)
+        val c = Calendar.getInstance()
+        c.set(gy, gm - 1, gd)
+        return (c.get(Calendar.DAY_OF_WEEK) - Calendar.SATURDAY + 7) % 7
+    }
+
+    val monthNames = listOf(
+        "فروردین", "اردیبهشت", "خرداد", "تیر", "مرداد", "شهریور",
+        "مهر", "آبان", "آذر", "دی", "بهمن", "اسفند"
+    )
+
     fun date(ms: Long): String {
         val c = Calendar.getInstance().apply { timeInMillis = ms }
         val (y, m, d) = toJalali(c.get(Calendar.YEAR), c.get(Calendar.MONTH) + 1, c.get(Calendar.DAY_OF_MONTH))
