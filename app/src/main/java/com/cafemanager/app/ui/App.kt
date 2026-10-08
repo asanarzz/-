@@ -95,15 +95,15 @@ fun MainScaffold(vm: AppViewModel) {
         bottomBar = {
             NavigationBar {
                 NavigationBarItem(selected = tab == 0, onClick = { tab = 0 },
-                    icon = { Icon(Icons.Default.Home, null) }, label = { Text("داشبورد") })
+                    icon = { Icon(Icons.Default.Home, null) }, label = { Text("داشبورد", maxLines = 1, style = MaterialTheme.typography.labelSmall) })
                 NavigationBarItem(selected = tab == 1, onClick = { tab = 1 },
-                    icon = { Icon(Icons.Default.Person, null) }, label = { Text("مشتریان") })
+                    icon = { Icon(Icons.Default.Person, null) }, label = { Text("مشتریان", maxLines = 1, style = MaterialTheme.typography.labelSmall) })
                 NavigationBarItem(selected = tab == 2, onClick = { tab = 2 },
-                    icon = { Icon(Icons.Default.ShoppingCart, null) }, label = { Text("فروش") })
+                    icon = { Icon(Icons.Default.ShoppingCart, null) }, label = { Text("فروش", maxLines = 1, style = MaterialTheme.typography.labelSmall) })
                 NavigationBarItem(selected = tab == 3, onClick = { tab = 3 },
-                    icon = { Icon(Icons.Default.AccountBox, null) }, label = { Text("مالی") })
+                    icon = { Icon(Icons.Default.AccountBox, null) }, label = { Text("مالی", maxLines = 1, style = MaterialTheme.typography.labelSmall) })
                 NavigationBarItem(selected = tab == 4, onClick = { tab = 4 },
-                    icon = { Icon(Icons.Default.Menu, null) }, label = { Text("بیشتر") })
+                    icon = { Icon(Icons.Default.Menu, null) }, label = { Text("بیشتر", maxLines = 1, style = MaterialTheme.typography.labelSmall) })
             }
         },
         floatingActionButton = {

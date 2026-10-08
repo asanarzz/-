@@ -29,6 +29,7 @@ private fun StatCard(title: String, value: String, modifier: Modifier = Modifier
     }
 }
 
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun DashboardScreen(
     vm: AppViewModel, biz: BizViewModel,
@@ -75,14 +76,17 @@ fun DashboardScreen(
             }
         }
         item {
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                Button(onClick = onNewCustomer, modifier = Modifier.weight(1f)) {
+            FlowRow(
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                Button(onClick = onNewCustomer) {
                     Icon(Icons.Default.Add, null)
                     Spacer(Modifier.width(4.dp))
-                    Text("مشتری")
+                    Text("مشتری", maxLines = 1)
                 }
-                Button(onClick = onNewSale, modifier = Modifier.weight(1f)) { Text("ثبت خدمت") }
-                Button(onClick = onLedger, modifier = Modifier.weight(1f)) { Text("دخل و خرج") }
+                Button(onClick = onNewSale) { Text("ثبت خدمت", maxLines = 1) }
+                Button(onClick = onLedger) { Text("دخل و خرج", maxLines = 1) }
             }
         }
         item { Text("فعالیت‌های اخیر", style = MaterialTheme.typography.titleMedium) }

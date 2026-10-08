@@ -168,6 +168,7 @@ fun InvoicesScreen(vm: AppViewModel, biz: BizViewModel, onBack: () -> Unit) {
 }
 
 // ====================== دخل و خرج ======================
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun LedgerScreen(biz: BizViewModel, modifier: Modifier = Modifier) {
     val list by biz.txns.collectAsState()
@@ -180,9 +181,12 @@ fun LedgerScreen(biz: BizViewModel, modifier: Modifier = Modifier) {
     Column(modifier.padding(horizontal = 16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
         Spacer(Modifier.height(4.dp))
         PeriodChips(period) { biz.period.value = it }
-        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            Button(onClick = { dialog = true }, modifier = Modifier.weight(1f)) { Text("ثبت درآمد") }
-            Button(onClick = { dialog = false }, modifier = Modifier.weight(1f)) { Text("ثبت هزینه") }
+        FlowRow(
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            Button(onClick = { dialog = true }) { Text("ثبت درآمد", maxLines = 1) }
+            Button(onClick = { dialog = false }) { Text("ثبت هزینه", maxLines = 1) }
         }
         Card(Modifier.fillMaxWidth()) {
             Column(Modifier.padding(12.dp)) {
@@ -363,6 +367,7 @@ private fun AddDebtDialog(customers: List<com.cafemanager.app.data.Customer>, bi
 }
 
 // ====================== صندوق ======================
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun CashScreen(biz: BizViewModel, onBack: () -> Unit) {
     val day by biz.cashDay.collectAsState()
@@ -395,9 +400,12 @@ fun CashScreen(biz: BizViewModel, onBack: () -> Unit) {
                     }
                 }
                 if (d.closedAt == null) {
-                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        OutlinedButton(onClick = { move = true }, modifier = Modifier.weight(1f)) { Text("واریز به صندوق") }
-                        OutlinedButton(onClick = { move = false }, modifier = Modifier.weight(1f)) { Text("برداشت از صندوق") }
+                    FlowRow(
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        OutlinedButton(onClick = { move = true }) { Text("واریز به صندوق", maxLines = 1) }
+                        OutlinedButton(onClick = { move = false }) { Text("برداشت از صندوق", maxLines = 1) }
                     }
                     MoneyField("موجودی واقعی صندوق (تومان)", actual, { actual = it })
                     if (actual.isNotBlank()) {
