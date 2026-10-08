@@ -15,7 +15,7 @@ android {
         targetSdk = 34
         // شماره ساخت در GitHub هر بار بیشتر می‌شود تا نسخه جدید روی قبلی نصب شود
         versionCode = System.getenv("GITHUB_RUN_NUMBER")?.toIntOrNull() ?: 1
-        versionName = "1.0.3"
+        versionName = System.getenv("APP_VERSION") ?: "1.0.0"
     }
 
     // امضای Release فقط از متغیرهای محیطی خوانده می‌شود؛ Keystore هرگز داخل مخزن نیست.
