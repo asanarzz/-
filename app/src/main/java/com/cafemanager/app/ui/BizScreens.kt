@@ -54,6 +54,15 @@ fun ServicesScreen(biz: BizViewModel, onBack: () -> Unit) {
     val list by biz.services.collectAsState()
     var editing by remember { mutableStateOf<Service?>(null) }
     var adding by remember { mutableStateOf(false) }
+    var sort by remember { mutableStateOf(0) }
+    val sorts = listOf("جدیدترین", "قدیمی‌ترین", "الفبا (الف تا ی)", "قیمت کم به زیاد", "قیمت زیاد به کم")
+    val shown = when (sort) {
+        0 -> list.sortedByDescending { it.id }
+        1 -> list.sortedBy { it.id }
+        2 -> list.sortedWith { a, b -> faCollator.compare(a.name, b.name) }
+        3 -> list.sortedBy { it.price }
+        else -> list.sortedByDescending { it.price }
+    }
 
     SubScreen("خدمات", onBack, fab = {
         FloatingActionButton(onClick = { adding = true }) { Icon(Icons.Default.Add, "خدمت جدید") }
@@ -68,7 +77,8 @@ fun ServicesScreen(biz: BizViewModel, onBack: () -> Unit) {
                 verticalArrangement = Arrangement.spacedBy(8.dp),
                 contentPadding = PaddingValues(vertical = 12.dp)
             ) {
-                items(list, key = { it.id }) { s ->
+                item { SortMenu(sorts, sort) { sort = it } }
+                items(shown, key = { it.id }) { s ->
                     Card(onClick = { editing = s }, modifier = Modifier.fillMaxWidth()) {
                         Column(Modifier.padding(16.dp)) {
                             Text(s.name, style = MaterialTheme.typography.titleMedium)
@@ -136,6 +146,14 @@ private fun ServiceDialog(base: Service?, biz: BizViewModel, onClose: () -> Unit
 fun InvoicesScreen(vm: AppViewModel, biz: BizViewModel, onBack: () -> Unit) {
     val list by biz.invoices.collectAsState()
     val ctx = LocalContext.current
+    var sort by remember { mutableStateOf(0) }
+    val sorts = listOf("جدیدترین", "قدیمی‌ترین", "بیشترین مبلغ", "الفبای مشتری")
+    val shown = when (sort) {
+        0 -> list.sortedByDescending { it.createdAt }
+        1 -> list.sortedBy { it.createdAt }
+        2 -> list.sortedByDescending { it.total }
+        else -> list.sortedWith { a, b -> faCollator.compare(a.customerName, b.customerName) }
+    }
     SubScreen("فاکتورها و رسیدها", onBack) { pad ->
         if (list.isEmpty()) {
             Box(Modifier.padding(pad).fillMaxSize(), contentAlignment = Alignment.Center) {
@@ -147,7 +165,8 @@ fun InvoicesScreen(vm: AppViewModel, biz: BizViewModel, onBack: () -> Unit) {
                 verticalArrangement = Arrangement.spacedBy(8.dp),
                 contentPadding = PaddingValues(vertical = 12.dp)
             ) {
-                items(list, key = { it.id }) { inv ->
+                item { SortMenu(sorts, sort) { sort = it } }
+                items(shown, key = { it.id }) { inv ->
                     Card(
                         onClick = { biz.receipt(inv.id, vm.profile) { shareText(ctx, it) } },
                         modifier = Modifier.fillMaxWidth()
@@ -267,6 +286,14 @@ fun DebtsScreen(biz: BizViewModel, onBack: () -> Unit) {
     val customers by biz.allCustomers.collectAsState()
     var paying by remember { mutableStateOf<Debt?>(null) }
     var adding by remember { mutableStateOf(false) }
+    var sort by remember { mutableStateOf(0) }
+    val sorts = listOf("جدیدترین", "قدیمی‌ترین", "بیشترین مانده", "الفبا (الف تا ی)")
+    val shown = when (sort) {
+        0 -> debts.sortedByDescending { it.createdAt }
+        1 -> debts.sortedBy { it.createdAt }
+        2 -> debts.sortedByDescending { it.amount - it.paid }
+        else -> debts.sortedWith { a, b -> faCollator.compare(a.customerName, b.customerName) }
+    }
 
     SubScreen("مطالبات", onBack, fab = {
         FloatingActionButton(onClick = { adding = true }) { Icon(Icons.Default.Add, "ثبت بدهی") }
@@ -279,8 +306,9 @@ fun DebtsScreen(biz: BizViewModel, onBack: () -> Unit) {
             item {
                 Text("جمع مطالبات: " + money(debts.sumOf { it.amount - it.paid }), style = MaterialTheme.typography.titleMedium)
             }
+            item { SortMenu(sorts, sort) { sort = it } }
             if (debts.isEmpty()) item { Text("بدهی بازی وجود ندارد") }
-            items(debts, key = { it.id }) { d ->
+            items(shown, key = { it.id }) { d ->
                 Card(onClick = { paying = d }, modifier = Modifier.fillMaxWidth()) {
                     Column(Modifier.padding(16.dp)) {
                         Text(d.customerName, style = MaterialTheme.typography.titleMedium)

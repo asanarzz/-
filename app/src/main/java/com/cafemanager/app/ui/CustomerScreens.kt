@@ -44,8 +44,17 @@ import com.cafemanager.app.util.normDigits
 fun CustomersScreen(vm: AppViewModel, onOpen: (Long) -> Unit, modifier: Modifier = Modifier) {
     val list by vm.customers.collectAsState()
     val q by vm.query.collectAsState()
+    var sort by remember { mutableStateOf(0) }
+    val sorts = listOf("جدیدترین", "قدیمی‌ترین", "الفبا (الف تا ی)", "الفبا (ی تا الف)")
+    val shown = when (sort) {
+        0 -> list.sortedByDescending { it.id }
+        1 -> list.sortedBy { it.id }
+        2 -> list.sortedWith { a, b -> faCollator.compare("${a.lastName} ${a.firstName}", "${b.lastName} ${b.firstName}") }
+        else -> list.sortedWith { a, b -> faCollator.compare("${b.lastName} ${b.firstName}", "${a.lastName} ${a.firstName}") }
+    }
 
     Column(modifier.padding(horizontal = 16.dp)) {
+        SortMenu(sorts, sort) { sort = it }
         OutlinedTextField(
             value = q, onValueChange = vm::setQuery,
             label = { Text("جستجو (نام، موبایل، کد ملی)") },
@@ -62,7 +71,7 @@ fun CustomersScreen(vm: AppViewModel, onOpen: (Long) -> Unit, modifier: Modifier
                 verticalArrangement = Arrangement.spacedBy(8.dp),
                 contentPadding = PaddingValues(bottom = 88.dp)
             ) {
-                items(list, key = { it.id }) { c ->
+                items(shown, key = { it.id }) { c ->
                     Card(onClick = { onOpen(c.id) }, modifier = Modifier.fillMaxWidth()) {
                         Column(Modifier.padding(16.dp)) {
                             Text("${c.firstName} ${c.lastName}", style = MaterialTheme.typography.titleMedium)
