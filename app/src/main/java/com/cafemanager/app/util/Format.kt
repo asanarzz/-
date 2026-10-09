@@ -102,7 +102,7 @@ object Jalali {
     )
 
     fun date(ms: Long): String {
-        val c = Calendar.getInstance().apply { timeInMillis = ms }
+        val c = java.util.GregorianCalendar().apply { timeInMillis = ms }
         val (y, m, d) = toJalali(c.get(Calendar.YEAR), c.get(Calendar.MONTH) + 1, c.get(Calendar.DAY_OF_MONTH))
         return "%04d/%02d/%02d".format(Locale.US, y, m, d)
     }
