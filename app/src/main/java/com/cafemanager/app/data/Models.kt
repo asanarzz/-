@@ -99,6 +99,12 @@ interface InvoiceDao {
 
     @Query("SELECT * FROM invoice_items WHERE invoiceId = :id")
     suspend fun items(id: Long): List<InvoiceItem>
+
+    @Query("DELETE FROM invoice_items WHERE invoiceId IN (SELECT id FROM invoices WHERE createdAt BETWEEN :from AND :to)")
+    suspend fun deleteItemsBetween(from: Long, to: Long): Int
+
+    @Query("DELETE FROM invoices WHERE createdAt BETWEEN :from AND :to")
+    suspend fun deleteBetween(from: Long, to: Long): Int
 }
 
 @Dao
@@ -109,7 +115,7 @@ interface TxnDao {
     fun between(from: Long, to: Long): Flow<List<Txn>>
 
     @Query("DELETE FROM transactions WHERE createdAt BETWEEN :from AND :to")
-    suspend fun deleteBetween(from: Long, to: Long)
+    suspend fun deleteBetween(from: Long, to: Long): Int
 }
 
 @Dao
@@ -121,6 +127,9 @@ interface DebtDao {
 
     @Query("UPDATE debts SET paid = paid + :p WHERE id = :id")
     suspend fun addPayment(id: Long, p: Long)
+
+    @Query("DELETE FROM debts WHERE createdAt BETWEEN :from AND :to")
+    suspend fun deleteBetween(from: Long, to: Long): Int
 }
 
 @Dao
@@ -130,6 +139,9 @@ interface CashDao {
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun upsert(d: CashDay)
+
+    @Query("DELETE FROM cash_days WHERE dateKey BETWEEN :fromKey AND :toKey")
+    suspend fun deleteBetween(fromKey: String, toKey: String): Int
 }
 
 /** رمز عبور سامانه‌های مشتری؛ فیلد password رمزنگاری‌شده ذخیره می‌شود. */

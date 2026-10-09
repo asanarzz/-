@@ -26,6 +26,11 @@ class SettingsStore(ctx: Context) {
         get() = p.getInt("autoLockSec", 60)
         set(v) { p.edit().putInt("autoLockSec", v).commit() }
 
+    /** قفل ورود به برنامه (PIN) روشن/خاموش؛ پیش‌فرض روشن */
+    var lockEnabled: Boolean
+        get() = p.getBoolean("lockEnabled", true)
+        set(v) { p.edit().putBoolean("lockEnabled", v).commit() }
+
     var fontScale: Float
         get() = p.getFloat("fontScale", 1.5f)
         set(v) { p.edit().putFloat("fontScale", v).commit() }
