@@ -5,14 +5,20 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Lock
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.unit.dp
 import com.cafemanager.app.AppViewModel
 import com.cafemanager.app.BizViewModel
 import com.cafemanager.app.data.Profile
+import com.cafemanager.app.util.fa
+import com.cafemanager.app.util.normDigits
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
@@ -24,7 +30,9 @@ fun SettingsScreen(vm: AppViewModel, biz: BizViewModel, modifier: Modifier = Mod
     var saved by remember { mutableStateOf(false) }
     var resetPeriod by remember { mutableIntStateOf(0) }
     var confirmReset by remember { mutableStateOf(false) }
-    var resetDone by remember { mutableStateOf(false) }
+    var resetCount by remember { mutableStateOf<Int?>(null) }
+    var askPin by remember { mutableStateOf(false) }
+    var pinText by remember { mutableStateOf("") }
     val periodLabels = listOf("امروز", "این هفته", "این ماه")
     val ctx = LocalContext.current
     val version = remember {
@@ -67,13 +75,39 @@ fun SettingsScreen(vm: AppViewModel, biz: BizViewModel, modifier: Modifier = Mod
         }
 
         HorizontalDivider()
-        Text("قفل خودکار بعد از", style = MaterialTheme.typography.titleMedium)
+        Text("قفل ورود به برنامه", style = MaterialTheme.typography.titleMedium)
+        Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+            Column(Modifier.weight(1f)) {
+                Text(if (vm.lockEnabled) "فعال" else "غیرفعال")
+                Text(
+                    if (vm.lockEnabled) "برای ورود به برنامه رمز (PIN) لازم است."
+                    else "برنامه بدون رمز باز می‌شود.",
+                    style = MaterialTheme.typography.bodySmall
+                )
+            }
+            Switch(
+                checked = vm.lockEnabled,
+                onCheckedChange = { on ->
+                    if (on) {
+                        vm.setLockEnabled(true)
+                    } else {
+                        pinText = ""
+                        vm.clearLockMessage()
+                        askPin = true
+                    }
+                }
+            )
+        }
+        Text("قفل خودکار بعد از")
         FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             listOf(30 to "۳۰ ثانیه", 60 to "۱ دقیقه", 300 to "۵ دقیقه", 900 to "۱۵ دقیقه").forEach { (s, l) ->
-                FilterChip(selected = vm.autoLockSec == s, onClick = { vm.setAutoLock(s) }, label = { Text(l) })
+                FilterChip(
+                    selected = vm.autoLockSec == s, enabled = vm.lockEnabled,
+                    onClick = { vm.setAutoLock(s) }, label = { Text(l) }
+                )
             }
         }
-        OutlinedButton(onClick = { vm.lock() }) {
+        OutlinedButton(enabled = vm.lockEnabled, onClick = { vm.lock() }) {
             Icon(Icons.Default.Lock, null)
             Spacer(Modifier.width(8.dp))
             Text("قفل کردن برنامه")
@@ -81,13 +115,15 @@ fun SettingsScreen(vm: AppViewModel, biz: BizViewModel, modifier: Modifier = Mod
 
         HorizontalDivider()
         Text("ریست اطلاعات مالی", style = MaterialTheme.typography.titleMedium)
-        Text("درآمدها و هزینه‌های بازه انتخاب‌شده در بخش مالی پاک می‌شود.")
-        ChipsRow(periodLabels, periodLabels[resetPeriod]) { resetPeriod = periodLabels.indexOf(it); resetDone = false }
+        Text("درآمد، هزینه، فاکتورها، بدهی‌های ثبت‌شده و صندوق بازه انتخاب‌شده پاک می‌شود. مشتری‌ها پاک نمی‌شوند.")
+        ChipsRow(periodLabels, periodLabels[resetPeriod]) { resetPeriod = periodLabels.indexOf(it); resetCount = null }
         Button(
             onClick = { confirmReset = true },
             colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
         ) { Text("ریست اطلاعات مالی " + periodLabels[resetPeriod]) }
-        if (resetDone) Text("ریست انجام شد")
+        resetCount?.let {
+            Text(if (it == 0) "در این بازه چیزی برای پاک‌کردن نبود." else "ریست انجام شد؛ ${it.fa()} مورد پاک شد.")
+        }
 
         HorizontalDivider()
         Text("CAFEMANAGER $version", style = MaterialTheme.typography.bodySmall)
@@ -99,15 +135,39 @@ fun SettingsScreen(vm: AppViewModel, biz: BizViewModel, modifier: Modifier = Mod
         text = {
             Text(
                 "همه درآمدها و هزینه‌های ${periodLabels[resetPeriod]} پاک می‌شود و قابل برگشت نیست. " +
-                    "فاکتورها، مشتریان و بدهی‌ها پاک نمی‌شوند."
+                    "شامل درآمد، هزینه، فاکتورها، بدهی‌های ثبت‌شده در همین بازه و صندوق است. مشتری‌ها پاک نمی‌شوند."
             )
         },
         confirmButton = {
             TextButton(onClick = {
                 confirmReset = false
-                biz.resetFinance(resetPeriod) { resetDone = true }
+                biz.resetFinance(resetPeriod) { resetCount = it }
             }) { Text("ریست کن") }
         },
         dismissButton = { TextButton(onClick = { confirmReset = false }) { Text("انصراف") } }
+    )
+
+    if (askPin) AlertDialog(
+        onDismissRequest = { askPin = false },
+        title = { Text("غیرفعال‌کردن قفل") },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Text("برای تأیید، رمز (PIN) فعلی را وارد کنید.")
+                OutlinedTextField(
+                    value = pinText, onValueChange = { pinText = it.filter(Char::isDigit).take(8) },
+                    label = { Text("رمز") }, singleLine = true,
+                    visualTransformation = PasswordVisualTransformation(),
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.NumberPassword),
+                    modifier = Modifier.fillMaxWidth()
+                )
+                vm.lockMessage?.let { Text(it, color = MaterialTheme.colorScheme.error) }
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = {
+                if (vm.setLockEnabled(false, pinText.normDigits())) askPin = false else pinText = ""
+            }) { Text("غیرفعال کن") }
+        },
+        dismissButton = { TextButton(onClick = { askPin = false }) { Text("انصراف") } }
     )
 }
