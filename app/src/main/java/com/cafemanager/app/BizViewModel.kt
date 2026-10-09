@@ -21,7 +21,7 @@ data class CartLine(val service: Service, val qty: Int)
 
 /** بازه زمانی: 0 امروز، 1 این هفته (از شنبه)، 2 این ماه شمسی */
 fun rangeFor(p: Int): Pair<Long, Long> {
-    val c = Calendar.getInstance()
+    val c = java.util.GregorianCalendar()
     c.set(Calendar.HOUR_OF_DAY, 0); c.set(Calendar.MINUTE, 0)
     c.set(Calendar.SECOND, 0); c.set(Calendar.MILLISECOND, 0)
     val todayStart = c.timeInMillis
@@ -172,7 +172,8 @@ class BizViewModel(app: Application) : AndroidViewModel(app) {
     // ---------- ریست اطلاعات مالی ----------
     /** همه اطلاعات مالی بازه (درآمد/هزینه، فاکتور، بدهی‌های ثبت‌شده در آن بازه و صندوق) پاک می‌شود. مشتری‌ها پاک نمی‌شوند. */
     fun resetFinance(p: Int, onDone: (Int) -> Unit) = guard {
-        val (a, b) = rangeFor(p)
+        val (a, _) = rangeFor(p)
+        val b = Long.MAX_VALUE
         val label = when (p) { 0 -> "امروز"; 1 -> "این هفته"; else -> "این ماه" }
         var total = 0
         db.withTransaction {
@@ -180,7 +181,7 @@ class BizViewModel(app: Application) : AndroidViewModel(app) {
             db.invoices().deleteItemsBetween(a, b)
             total += db.invoices().deleteBetween(a, b)
             total += db.debts().deleteBetween(a, b)
-            total += db.cash().deleteBetween(Jalali.date(a), Jalali.date(b))
+            total += db.cash().deleteBetween(Jalali.date(a), "9999/99/99")
             db.activity().insert(ActivityEntry(type = "reset", message = "اطلاعات مالی $label ریست شد"))
         }
         onDone(total)
