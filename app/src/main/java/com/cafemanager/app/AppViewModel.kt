@@ -20,7 +20,8 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
     private val store = SettingsStore(app)
 
     var setupDone by mutableStateOf(store.setupDone); private set
-    var locked by mutableStateOf(store.setupDone && store.hasPin); private set
+    var lockEnabled by mutableStateOf(store.lockEnabled); private set
+    var locked by mutableStateOf(store.setupDone && store.hasPin && store.lockEnabled); private set
     var themeMode by mutableIntStateOf(store.themeMode); private set
     var autoLockSec by mutableIntStateOf(store.autoLockSec); private set
     var fontScale by mutableFloatStateOf(store.fontScale); private set
@@ -45,7 +46,8 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
         log("setup", "راه‌اندازی برنامه انجام شد")
     }
 
-    fun unlock(pin: String): Boolean {
+    /** بررسی PIN همراه با محدودیت تلاش (۵ بار اشتباه = ۳۰ ثانیه صبر) */
+    private fun pinMatches(pin: String): Boolean {
         val now = SystemClock.elapsedRealtime()
         if (now < lockedUntil) {
             lockMessage = "لطفاً چند ثانیه صبر کنید"
@@ -58,8 +60,6 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
         if (ok) {
             failed = 0
             lockMessage = null
-            locked = false
-            log("login", "ورود به برنامه")
             return true
         }
         failed++
@@ -73,8 +73,34 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
         return false
     }
 
+    fun unlock(pin: String): Boolean {
+        if (!pinMatches(pin)) return false
+        locked = false
+        log("login", "ورود به برنامه")
+        return true
+    }
+
+    fun clearLockMessage() { lockMessage = null }
+
+    /** روشن‌کردن قفل بدون رمز؛ خاموش‌کردن فقط با وارد کردن PIN فعلی. */
+    fun setLockEnabled(enabled: Boolean, pin: String = ""): Boolean {
+        if (enabled) {
+            if (!store.hasPin) return false
+            store.lockEnabled = true
+            lockEnabled = true
+            log("settings", "قفل ورود به برنامه فعال شد")
+            return true
+        }
+        if (!pinMatches(pin)) return false
+        store.lockEnabled = false
+        lockEnabled = false
+        locked = false
+        log("settings", "قفل ورود به برنامه غیرفعال شد")
+        return true
+    }
+
     fun lock() {
-        if (store.hasPin) {
+        if (store.hasPin && lockEnabled) {
             locked = true
             log("logout", "قفل شدن برنامه")
         }
@@ -85,7 +111,7 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
     fun onForeground() {
         val t = backgroundAt
         backgroundAt = -1
-        if (t >= 0 && setupDone && !locked && autoLockSec > 0 &&
+        if (t >= 0 && setupDone && lockEnabled && !locked && autoLockSec > 0 &&
             SystemClock.elapsedRealtime() - t > autoLockSec * 1000L
         ) locked = true
     }

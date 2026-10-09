@@ -170,14 +170,20 @@ class BizViewModel(app: Application) : AndroidViewModel(app) {
     }
 
     // ---------- ریست اطلاعات مالی ----------
-    fun resetFinance(p: Int, onDone: () -> Unit) = guard {
+    /** همه اطلاعات مالی بازه (درآمد/هزینه، فاکتور، بدهی‌های ثبت‌شده در آن بازه و صندوق) پاک می‌شود. مشتری‌ها پاک نمی‌شوند. */
+    fun resetFinance(p: Int, onDone: (Int) -> Unit) = guard {
         val (a, b) = rangeFor(p)
         val label = when (p) { 0 -> "امروز"; 1 -> "این هفته"; else -> "این ماه" }
+        var total = 0
         db.withTransaction {
-            db.txns().deleteBetween(a, b)
+            total += db.txns().deleteBetween(a, b)
+            db.invoices().deleteItemsBetween(a, b)
+            total += db.invoices().deleteBetween(a, b)
+            total += db.debts().deleteBetween(a, b)
+            total += db.cash().deleteBetween(Jalali.date(a), Jalali.date(b))
             db.activity().insert(ActivityEntry(type = "reset", message = "اطلاعات مالی $label ریست شد"))
         }
-        onDone()
+        onDone(total)
     }
 
     // ---------- بدهی ----------
